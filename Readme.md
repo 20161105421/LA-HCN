@@ -6,11 +6,12 @@ The implementation of data preparsion part refers to the [CODE](https://github.c
 
 ### Package Version
 
-     Keras-Preprocessing==1.1.2
-     numpy==1.19.2
-     scikit-learn==0.24.1
+     numpy==1.18.2
+     scikit-learn==0.23.2
      scipy==1.4.1
+     tensorflow-estimator==2.2.0
      tensorflow-gpu==2.2.0
+     tflearn==0.5.0
     
 ***
 ## Data Preparation
