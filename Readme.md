@@ -6,17 +6,17 @@ The implementation of data preparsion part refers to the [CODE](https://github.c
 
 ### Package Version
 
-     numpy==1.18.2
-     scikit-learn==0.23.2
+     Keras-Preprocessing==1.1.2
+     numpy==1.19.2
+     scikit-learn==0.24.1
      scipy==1.4.1
-     tensorflow-estimator==2.2.0
      tensorflow-gpu==2.2.0
-     tflearn==0.5.0
     
 ***
 ## Data Preparation
 
-The experimental datasets used in paper are available at [Dataset](https://drive.google.com/file/d/1xSAxOIFwk6xSlYCW9suLXlb07HgznhYn/view?usp=sharing).
+The experimental datasets used in paper are available at [Datasets](https://drive.google.com/file/d/1xSAxOIFwk6xSlYCW9suLXlb07HgznhYn/view?usp=sharing)
+
 ### Data Format
 
 The data format used in this implementation refers to the [HARNN](https://github.com/RandolphVI/Hierarchical-Multi-Label-Text-Classification) project:
@@ -73,6 +73,7 @@ Important Hyper-arameter setting:
   --train_or_restore        STR     Train or Restore (default: Train)   e.g. 'Train'
   
   
+  --BiLSTM                  BOOL    If use Bi-LSTM as text encoder.(True for wipo/BGC; False for Enron/Reuters)
   --learning_rate           FLOAT   Learning Rate (default: 0.001)      e.g. 0.001
   --batch_size BATCH_SIZE   FLOAT   Batch Size (default: 256)
   --num_epochs              FLOAT   Number of training epochs (default: 100)
@@ -90,7 +91,7 @@ Important Hyper-arameter setting:
   --threshold               FLOAT   Threshold for prediction on validation data (default: 0.5)
 ```
 
-*NOTE*. if glove_file is not available, a word2id dictionary will be generated and applied in testing procedure.
+*NOTE*. if glove_file is not available, a word2id dictionary will be generated.
 ***
 ## Output
 
