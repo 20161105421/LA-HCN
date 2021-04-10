@@ -16,8 +16,7 @@ The implementation of data preparsion part refers to the [CODE](https://github.c
 ***
 ## Data Preparation
 
-The experimental datasets used in paper are available at https://drive.google.com/file/d/1g3Ln0fzCIqUO7A1GTZpKntXSUaiJdqgZ/view?usp=sharing
-
+The experimental datasets used in paper are available at...
 ### Data Format
 
 The data format used in this implementation refers to the [HARNN](https://github.com/RandolphVI/Hierarchical-Multi-Label-Text-Classification) project:
