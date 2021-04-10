@@ -5,12 +5,12 @@ from scipy.sparse import lil_matrix
 from utils import checkmate as cm
 from src.test_utils import *
 from utils import data_helpers as dh
-from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, average_precision_score
+from sklearn.metrics import precision_score, recall_score, f1_score, average_precision_score
 MODEL = input("☛ Please input the model file you want to test, it should be like(1490175368_{dataname}_{beta}): ")  # The model you want to restore
 print("✔︎ The format of your input is legal, now loading to next step...")
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Run LA_HCN.")
+    parser = argparse.ArgumentParser(description="Test LA_HCN.")
 
     # hyper-para for datasets
     parser.add_argument('--dataname', type=str, default='reuters_0', help="dataname.")
@@ -60,19 +60,17 @@ def evaluate(true_onehot_labels, true_onehot_labels_level_dict,
     pre_list_level = []; rec_list_level = []; F_list_level = []; prc_list_level = []; auc_list_level = []
     pre_tk = []; rec_tk = []; F_tk = []
     for type in ['macro', 'micro']:
-        logger.print("✔︎ #############################   For All Label ({}). ###############################".format(emb_type))
+        logger.print("✔︎ #############################   For All Label ({})-{}. ###############################".format(emb_type, type))
         pre =  precision_score(y_true=true_onehot_labels, y_pred=predicted_onehot_labels_ts, average=type)
         rec = recall_score(y_true=true_onehot_labels, y_pred=predicted_onehot_labels_ts, average=type)
         F = f1_score(y_true=true_onehot_labels, y_pred=predicted_onehot_labels_ts, average=type)
-        try:
+        if type == 'macro':
+            prc = np.nanmean(average_precision_score(y_true=true_onehot_labels.toarray(), y_score=np.vstack(predict_scores),
+                                      average=None))
+        else:
             prc = average_precision_score(y_true=true_onehot_labels.toarray(), y_score=np.vstack(predict_scores), average=type)
-        except:
-            prc = 0
-        try:
-            auc = roc_auc_score(y_true=true_onehot_labels.toarray(), y_score=np.vstack(predict_scores), average=type)
-        except:
-            auc = 0
-        logger.print("☛ All Test Dataset For ALL Label: AUC_{0} {1:g} | AUPRC_{2} {3:g}".format(type, auc, type, prc))
+
+        logger.print("☛ All Test Dataset For ALL Label: AUPRC_{0} {1:g}".format(type, prc))
         logger.print("☛ All Test Dataset For All Label: Pre_{0} {1:g} | Rec_{2} {3:g} | F1_{4} {5:g}".format(
             type, pre, type, rec, type, F))
         test_pre_list = []; test_rec_list = []; test_F_list = []; test_prc_list = []; test_auc_list = []
@@ -85,20 +83,15 @@ def evaluate(true_onehot_labels, true_onehot_labels_level_dict,
                                               average=type))
             test_F_list.append(f1_score(y_true=true_onehot_labels_level_dict[i],
                                         y_pred=predicted_onehot_labels_ts_level[i], average=type))
-            try:
+            if type == 'macro':
+                test_prc_list.append(np.nanmean(average_precision_score(y_true=true_onehot_labels_level_dict[i].toarray(),
+                                                             y_score=np.vstack(predict_scores_level[i]), average=None)))
+            else:
                 test_prc_list.append(average_precision_score(y_true=true_onehot_labels_level_dict[i].toarray(),
-                                                             y_score=np.vstack(predict_scores_level[i]), average=type))
-            except:
-                test_prc_list.append(0)
-            try:
-                test_auc_list.append(roc_auc_score(y_true=true_onehot_labels_level_dict[i].toarray(),
-                                                   y_score=np.vstack(predict_scores_level[i]), average=type))
-            except:
-                test_auc_list.append(0)
+                                                       y_score=np.vstack(predict_scores_level[i]), average=type))
             logger.print(
-                "☛ Predict by threshold in Level-{0}: Pre_{1} {2:g}, Rec_{3} {4:g}, F1_{5} {6:g}, AUPRC_{7} {8:g}, AUC_{9} {10:g}".format(
-                    i + 1, type, test_pre_list[i], type, test_rec_list[i], type, test_F_list[i], type, test_prc_list[i],
-                    type, test_auc_list[i]))
+                "☛ Predict by threshold in Level-{0}: Pre_{1} {2:g}, Rec_{3} {4:g}, F1_{5} {6:g}, AUPRC_{7} {8:g}".format(
+                    i + 1, type, test_pre_list[i], type, test_rec_list[i], type, test_F_list[i], type, test_prc_list[i]))
 
         test_pre_tk = []; test_rec_tk = []; test_F_tk = []
         for level_i in range(args.top_num):

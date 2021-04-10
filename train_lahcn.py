@@ -14,14 +14,15 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Run LA_HCN.")
 
     # hyper-para for datasets
-    parser.add_argument('--dataname', type=str, default='enron_0', help="training data.")
-    parser.add_argument('--training_data_file', type=str, default='data/data_16_nov/enron/0/enron_train_0.json', help="path to training data.")
-    parser.add_argument('--validation_data_file', type=str, default='data/data_16_nov/enron/0/enron_val_0.json', help="path to validation data.")
+    parser.add_argument('--dataname', type=str, default='reuters_0', help="training data.")
+    parser.add_argument('--training_data_file', type=str, default='data/data_16_nov/reuters/0/reuters_train_0.json', help="path to training data.")
+    parser.add_argument('--validation_data_file', type=str, default='data/data_16_nov/reuters/0/reuters_val_0.json', help="path to validation data.")
     parser.add_argument('--num_classes_list', type=str, default="3,40,13", help="Number of labels list (depends on the task)")
     parser.add_argument('--glove_file', type=str, default="data/data_16_nov/glove6b100dtxt/glove.6B.100d.txt", help="glove embeding file")
     parser.add_argument('--train_or_restore', type=str, default='Train', help="Train or Restore. (default: Train)")
 
     # hyper-para for training
+    parser.add_argument('--BiLSTM', type=bool, default=False, help="True for wipo/BGC; False for Enron/Reuters.")
     parser.add_argument('--learning_rate', type=float, default=0.001, help="Learning Rate.")
     parser.add_argument('--batch_size', type=int, default=30, help="Batch Size (default: 256)")
     parser.add_argument('--num_epochs', type=int, default=100, help="Number of training epochs (default: 100)")
@@ -104,7 +105,8 @@ def train(args):
                 fc_hidden_size=args.fc_hidden_size,
                 embedding_size=args.embedding_dim,
                 l2_reg_lambda=args.l2_reg_lambda,
-                pretrained_embedding=pretrained_glove_emb)
+                pretrained_embedding=pretrained_glove_emb,
+                BiLSTM = args.BiLSTM)
 
             # Define training procedure
             with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
