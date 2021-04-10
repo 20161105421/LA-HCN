@@ -3,9 +3,10 @@ import tensorflow.compat.v1 as tf
 class LA_HCN(object):
     def __init__(
             self, sequence_length, num_classes_list, total_classes, vocab_size, lstm_hidden_size,
-            attention_unit_size, fc_hidden_size, embedding_size,
+            attention_unit_size, fc_hidden_size, embedding_size,BiLSTM,
             l2_reg_lambda=0.0, concept_dim=50,pretrained_embedding=None):
 
+        self.BiLSTM = BiLSTM
         self.placeholder_define(sequence_length, num_classes_list, total_classes)
         self.Variable_define(
             num_classes_list=num_classes_list,
@@ -19,7 +20,7 @@ class LA_HCN(object):
             lstm_hidden_size = lstm_hidden_size)
 
         self.local_embedding_preprocessing(num_classes_list)
-        self.Input_Layer(lstm_hidden_size)
+        self.Input_Layer(lstm_hidden_size, BiLSTM)
 
             # First Level
         local_fc_out_mean = None
@@ -137,9 +138,14 @@ class LA_HCN(object):
             self.concept_features_list.append(tf.Variable(
                 tf.truncated_normal(shape=[concept_num, attention_unit_size], stddev=0.1, dtype=tf.float32),
                 name="level-{}-concept_fea".format(level_idx)))
-            self.W_word_to_concept_list.append(tf.Variable(
-                tf.truncated_normal(shape=[lstm_hidden_size*2, attention_unit_size], stddev=0.1, dtype=tf.float32),
-                name="level-{}-W_word2concept".format(level_idx)))
+            if self.BiLSTM:
+                self.W_word_to_concept_list.append(tf.Variable(
+                    tf.truncated_normal(shape=[lstm_hidden_size*2, attention_unit_size], stddev=0.1, dtype=tf.float32),
+                    name="level-{}-W_word2concept".format(level_idx)))
+            else:
+                self.W_word_to_concept_list.append(tf.Variable(
+                    tf.truncated_normal(shape=[word_emb_size, attention_unit_size], stddev=0.1, dtype=tf.float32),
+                    name="level-{}-W_word2concept".format(level_idx)))
             self.W_label_to_concept_list.append(tf.Variable(
                 tf.truncated_normal(shape=[fc_hidden_size, attention_unit_size], stddev=0.1, dtype=tf.float32),
                 name="level-{}-W_label2concept".format(level_idx)))
@@ -186,19 +192,23 @@ class LA_HCN(object):
                 self.label_embedding_list.append(
                     self.label_embedding[self.hier_split[level_idx][0]:self.hier_split[level_idx][1]])
 
-    def Input_Layer(self, lstm_hidden_size):
+    def Input_Layer(self, lstm_hidden_size, BiLSTM):
         self.embedded_sentence = tf.nn.embedding_lookup(self.embedding, self.input_x)
         self.embedded_sentence_average = tf.reduce_mean(self.embedded_sentence, axis=1)
         # Bi-LSTM Layer
-        with tf.name_scope("Bi-lstm"):
-            lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(lstm_hidden_size)  # forward direction cell
-            lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(lstm_hidden_size)  # backward direction cell
-            if self.dropout is not None:
-                lstm_fw_cell = tf.nn.rnn_cell.DropoutWrapper(lstm_fw_cell, output_keep_prob=self.dropout)
-                lstm_bw_cell = tf.nn.rnn_cell.DropoutWrapper(lstm_bw_cell, output_keep_prob=self.dropout)
-            outputs, state = tf.nn.bidirectional_dynamic_rnn(lstm_fw_cell, lstm_bw_cell, self.embedded_sentence, dtype=tf.float32)
-            self.lstm_out = tf.concat(outputs, axis=2)  # [batch_size, sequence_length, lstm_hidden_size * 2]
-            self.lstm_out_pool = tf.reduce_mean(self.lstm_out, axis=1)  # [batch_size, lstm_hidden_size * 2]
+        if BiLSTM:
+            with tf.name_scope("Bi-lstm"):
+                lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(lstm_hidden_size)  # forward direction cell
+                lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(lstm_hidden_size)  # backward direction cell
+                if self.dropout is not None:
+                    lstm_fw_cell = tf.nn.rnn_cell.DropoutWrapper(lstm_fw_cell, output_keep_prob=self.dropout)
+                    lstm_bw_cell = tf.nn.rnn_cell.DropoutWrapper(lstm_bw_cell, output_keep_prob=self.dropout)
+                outputs, state = tf.nn.bidirectional_dynamic_rnn(lstm_fw_cell, lstm_bw_cell, self.embedded_sentence, dtype=tf.float32)
+                self.lstm_out = tf.concat(outputs, axis=2)  # [batch_size, sequence_length, lstm_hidden_size * 2]
+                self.lstm_out_pool = tf.reduce_mean(self.lstm_out, axis=1)  # [batch_size, lstm_hidden_size * 2]
+        else:
+            self.lstm_out = tf.concat(self.embedded_sentence, axis =2)
+            self.lstm_out_pool = tf.reduce_mean(self.lstm_out, axis=1)
 
     def FC_Layer(self, input_x, level_i, fc_hidden_size):
         with tf.name_scope('Fc_layer_{}'.format(level_i)):
