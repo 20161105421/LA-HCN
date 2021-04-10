@@ -90,7 +90,7 @@ Important Hyper-arameter setting:
   --threshold               FLOAT   Threshold for prediction on validation data (default: 0.5)
 ```
 
-*NOTE*. if glove_file is not available, a word2id dictionary will be generated.
+*NOTE*. if glove_file is not available, a word2id dictionary will be generated and applied in testing procedure.
 ***
 ## Output
 
